@@ -153,3 +153,105 @@ def test_update_movie_keeps_own_title(client, movie):
     )
 
     assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_create_actor(client, movie):
+    response = client.post(
+        "/api/actors/",
+        {"first_name": "ccccc", "last_name": "ddddd", "movie_id": movie.id},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Actor.objects.count() == 2
+    created = Actor.objects.get(first_name="ccccc")
+    assert created.last_name == "ddddd"
+    assert created in movie.actors.all()
+
+
+@pytest.mark.django_db
+def test_create_actor_requires_movie_id(client):
+    response = client.post(
+        "/api/actors/",
+        {"first_name": "ccccc", "last_name": "ddddd"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Actor.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_actor_movie_not_found(client):
+    response = client.post(
+        "/api/actors/",
+        {"first_name": "ccccc", "last_name": "ddddd", "movie_id": 999},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Actor.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_retrieve_actor(client, actor):
+    response = client.get(f"/api/actors/{actor.id}/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {
+        "id": actor.id,
+        "first_name": actor.first_name,
+        "last_name": actor.last_name,
+    }
+
+
+@pytest.mark.django_db
+def test_retrieve_actor_not_found(client):
+    response = client.get("/api/actors/999/")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_update_actor(client, actor):
+    response = client.put(
+        f"/api/actors/{actor.id}/",
+        {"first_name": "eeeee", "last_name": "fffff"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    actor.refresh_from_db()
+    assert actor.first_name == "eeeee"
+    assert actor.last_name == "fffff"
+
+
+@pytest.mark.django_db
+def test_update_actor_ignores_movie_id(client, actor, movie):
+    other_movie = Movie.objects.create(title="ccccc", description="ddddd")
+
+    response = client.put(
+        f"/api/actors/{actor.id}/",
+        {"first_name": "eeeee", "last_name": "fffff", "movie_id": other_movie.id},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert list(other_movie.actors.all()) == []
+    assert actor in movie.actors.all()
+
+
+@pytest.mark.django_db
+def test_delete_actor(client, actor):
+    response = client.delete(f"/api/actors/{actor.id}/")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert Actor.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_delete_actor_removes_it_from_movie(client, actor, movie):
+    client.delete(f"/api/actors/{actor.id}/")
+
+    assert list(movie.actors.all()) == []
