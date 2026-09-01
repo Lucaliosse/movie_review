@@ -33,6 +33,35 @@ class MovieSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "description", "actors"]
 
 
+class MovieListSerializer(serializers.ModelSerializer):
+    average_review = serializers.FloatField(read_only=True, allow_null=True)
+    actor_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Movie
+        fields = ["id", "title", "average_review", "actor_count"]
+
+
+class MovieDetailSerializer(serializers.ModelSerializer):
+    actors = serializers.SerializerMethodField()
+    average_review = serializers.FloatField(read_only=True, allow_null=True)
+    review_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Movie
+        fields = [
+            "id",
+            "title",
+            "description",
+            "actors",
+            "average_review",
+            "review_count",
+        ]
+
+    def get_actors(self, movie):
+        return [str(actor) for actor in movie.actors.all()]
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review

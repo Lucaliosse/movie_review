@@ -27,8 +27,24 @@ def test_list_movies(client, movie):
     response = client.get("/api/movies/")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data[0]["id"] == movie.id
-    assert response.data[0]["title"] == movie.title
+    assert response.data[0] == {
+        "id": movie.id,
+        "title": movie.title,
+        "average_review": None,
+        "actor_count": 1,
+    }
+
+
+@pytest.mark.django_db
+def test_list_movies_average_review(client, movie):
+    Review.objects.create(grade=2, movie=movie)
+    Review.objects.create(grade=4, movie=movie)
+
+    response = client.get("/api/movies/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data[0]["average_review"] == 3
+    assert response.data[0]["actor_count"] == 1
 
 
 @pytest.mark.django_db
@@ -38,13 +54,21 @@ def test_retrieve_movie(client, movie, actor):
     assert response.status_code == status.HTTP_200_OK
     assert response.data["title"] == movie.title
     assert response.data["description"] == movie.description
-    assert response.data["actors"] == [
-        {
-            "id": actor.id,
-            "first_name": actor.first_name,
-            "last_name": actor.last_name,
-        }
-    ]
+    assert response.data["actors"] == [str(actor)]
+    assert response.data["average_review"] is None
+    assert response.data["review_count"] == 0
+
+
+@pytest.mark.django_db
+def test_retrieve_movie_average_review(client, movie):
+    Review.objects.create(grade=1, movie=movie)
+    Review.objects.create(grade=5, movie=movie)
+
+    response = client.get(f"/api/movies/{movie.id}/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["average_review"] == 3
+    assert response.data["review_count"] == 2
 
 
 @pytest.mark.django_db
