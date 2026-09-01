@@ -25,6 +25,14 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+### Environment Variables
+
+Copy `.env.example` to `.env` and adjust values for your local setup (e.g. the backend API URL)
+
+```sh
+cp .env.example .env
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh

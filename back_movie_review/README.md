@@ -32,12 +32,19 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Copy the example env file and adjust values if needed
+cp .env.example .env
+
 # Apply migrations
 python manage.py migrate
 
 # Run the server
 python manage.py runserver
 ```
+
+### Environment Variables
+
+Configuration that varies per environment (secrets, debug flag, allowed hosts, CORS origins) is read from a `.env` file at the project root, loaded via `django-environ`. Copy `.env.example` to `.env` and adjust values for your local setup — `.env` is gitignored, `.env.example` is committed as the reference.
 
 
 ---
