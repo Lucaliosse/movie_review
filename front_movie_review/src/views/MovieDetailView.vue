@@ -165,6 +165,15 @@ async function submitReview() {
   </v-alert>
 
   <v-container v-else-if="movie">
+    <v-btn
+      :to="{ name: 'movie-list' }"
+      prepend-icon="mdi-arrow-left"
+      variant="text"
+      class="mb-2"
+    >
+      Back to movies
+    </v-btn>
+
     <div class="d-flex align-start justify-space-between">
       <EditableText
         :model-value="movie.title"
