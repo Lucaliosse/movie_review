@@ -85,6 +85,8 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
+MOVIE_PAGE_SIZE = env.int("MOVIE_PAGE_SIZE", default=5)
+
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=["http://localhost:5173", "http://127.0.0.1:5173"],

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import Avg, Count
 from rest_framework import mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
@@ -14,7 +15,7 @@ from .serializers import (
 
 
 class MoviePagination(PageNumberPagination):
-    page_size = 5
+    page_size = settings.MOVIE_PAGE_SIZE
 
 
 class MovieViewSet(viewsets.ModelViewSet):
