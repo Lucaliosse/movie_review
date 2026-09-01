@@ -2,7 +2,7 @@ import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from movies.models import Actor, Movie
+from movies.models import Actor, Movie, Review
 
 
 @pytest.fixture
@@ -255,3 +255,55 @@ def test_delete_actor_removes_it_from_movie(client, actor, movie):
     client.delete(f"/api/actors/{actor.id}/")
 
     assert list(movie.actors.all()) == []
+
+
+@pytest.mark.django_db
+def test_create_review(client, movie):
+    response = client.post(
+        "/api/reviews/",
+        {"grade": 4, "movie": movie.id},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Review.objects.count() == 1
+    created = Review.objects.get()
+    assert created.grade == 4
+    assert created.movie == movie
+
+
+@pytest.mark.django_db
+def test_create_review_requires_movie(client):
+    response = client.post(
+        "/api/reviews/",
+        {"grade": 4},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Review.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_review_movie_not_found(client):
+    response = client.post(
+        "/api/reviews/",
+        {"grade": 4, "movie": 999},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Review.objects.count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("grade", [0, 6])
+def test_create_review_grade_out_of_range_rejected(client, movie, grade):
+    response = client.post(
+        "/api/reviews/",
+        {"grade": grade, "movie": movie.id},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Review.objects.count() == 0

@@ -1,7 +1,12 @@
 from rest_framework import mixins, viewsets
 
-from .models import Actor, Movie
-from .serializers import ActorCreateSerializer, ActorSerializer, MovieSerializer
+from .models import Actor, Movie, Review
+from .serializers import (
+    ActorCreateSerializer,
+    ActorSerializer,
+    MovieSerializer,
+    ReviewSerializer,
+)
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -22,3 +27,8 @@ class ActorViewSet(
         if self.action == "create":
             return ActorCreateSerializer
         return ActorSerializer
+
+
+class ReviewViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
