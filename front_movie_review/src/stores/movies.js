@@ -39,6 +39,11 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
+    async createMovie(data) {
+      const response = await api.post('/movies/', data)
+      return response.data
+    },
+
     async updateMovie(id, data) {
       await api.patch(`/movies/${id}/`, data)
       await this.fetchMovie(id)

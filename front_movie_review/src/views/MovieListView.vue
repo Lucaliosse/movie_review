@@ -11,7 +11,12 @@ onMounted(() => {
 
 <template>
   <v-container>
-    <h1 class="text-h4 mb-4">Movies</h1>
+    <div class="d-flex align-center justify-space-between mb-4">
+      <h1 class="text-h4">Movies</h1>
+      <v-btn :to="{ name: 'movie-create' }" color="primary" prepend-icon="mdi-plus">
+        Create movie
+      </v-btn>
+    </div>
 
     <v-alert v-if="moviesStore.error" type="error" class="mb-4">
       {{ moviesStore.error }}
