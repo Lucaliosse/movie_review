@@ -11,7 +11,7 @@ class Actor(models.Model):
 
 
 class Movie(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
     actors = models.ManyToManyField(Actor, related_name="movies", blank=True)
 

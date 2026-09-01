@@ -117,3 +117,39 @@ def test_retrieve_movie_not_found(client):
     response = client.get("/api/movies/999/")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_create_movie_duplicate_title_rejected(client, movie):
+    response = client.post(
+        "/api/movies/",
+        {"title": movie.title, "description": "ddddd"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Movie.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_update_movie_duplicate_title_rejected(client, movie):
+    other_movie = Movie.objects.create(title="ccccc", description="ddddd")
+
+    response = client.put(
+        f"/api/movies/{other_movie.id}/",
+        {"title": movie.title, "description": "ddddd"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_update_movie_keeps_own_title(client, movie):
+    response = client.put(
+        f"/api/movies/{movie.id}/",
+        {"title": movie.title, "description": "updated"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
