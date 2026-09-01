@@ -27,7 +27,10 @@ def test_list_movies(client, movie):
     response = client.get("/api/movies/")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data[0] == {
+    assert response.data["count"] == 1
+    assert response.data["next"] is None
+    assert response.data["previous"] is None
+    assert response.data["results"][0] == {
         "id": movie.id,
         "title": movie.title,
         "average_review": None,
@@ -43,8 +46,35 @@ def test_list_movies_average_review(client, movie):
     response = client.get("/api/movies/")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data[0]["average_review"] == 3
-    assert response.data[0]["actor_count"] == 1
+    assert response.data["results"][0]["average_review"] == 3
+    assert response.data["results"][0]["actor_count"] == 1
+
+
+@pytest.mark.django_db
+def test_list_movies_pagination_first_page(client):
+    for i in range(7):
+        Movie.objects.create(title=f"movie-{i}")
+
+    response = client.get("/api/movies/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["count"] == 7
+    assert len(response.data["results"]) == 5
+    assert response.data["previous"] is None
+    assert response.data["next"] is not None
+
+
+@pytest.mark.django_db
+def test_list_movies_pagination_second_page(client):
+    for i in range(7):
+        Movie.objects.create(title=f"movie-{i}")
+
+    response = client.get("/api/movies/", {"page": 2})
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data["results"]) == 2
+    assert response.data["previous"] is not None
+    assert response.data["next"] is None
 
 
 @pytest.mark.django_db

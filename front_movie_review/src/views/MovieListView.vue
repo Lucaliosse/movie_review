@@ -1,12 +1,18 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useMoviesStore } from '@/stores/movies'
 
 const moviesStore = useMoviesStore()
 
+const totalPages = computed(() => Math.ceil(moviesStore.moviesCount / moviesStore.pageSize))
+
 onMounted(() => {
   moviesStore.fetchMovies()
 })
+
+function goToPage(page) {
+  moviesStore.fetchMovies(page)
+}
 </script>
 
 <template>
@@ -55,5 +61,13 @@ onMounted(() => {
         </v-card>
       </v-col>
     </v-row>
+
+    <v-pagination
+      v-if="!moviesStore.loading && totalPages > 1"
+      :model-value="moviesStore.currentPage"
+      :length="totalPages"
+      class="mt-4"
+      @update:model-value="goToPage"
+    />
   </v-container>
 </template>

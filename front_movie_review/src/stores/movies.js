@@ -4,6 +4,9 @@ import api from '@/services/api'
 export const useMoviesStore = defineStore('movies', {
   state: () => ({
     movies: [],
+    moviesCount: 0,
+    pageSize: 5,
+    currentPage: 1,
     loading: false,
     error: null,
     currentMovie: null,
@@ -11,12 +14,14 @@ export const useMoviesStore = defineStore('movies', {
     currentMovieError: null,
   }),
   actions: {
-    async fetchMovies() {
+    async fetchMovies(page = 1) {
       this.loading = true
       this.error = null
       try {
-        const response = await api.get('/movies/')
-        this.movies = response.data
+        const response = await api.get('/movies/', { params: { page } })
+        this.movies = response.data.results
+        this.moviesCount = response.data.count
+        this.currentPage = page
       } catch (error) {
         this.error = 'Failed to load movies.'
         throw error

@@ -15,6 +15,9 @@ class Movie(models.Model):
     description = models.TextField(blank=True)
     actors = models.ManyToManyField(Actor, related_name="movies", blank=True)
 
+    class Meta:
+        ordering = ["title"]
+
     def __str__(self):
         return self.title
 

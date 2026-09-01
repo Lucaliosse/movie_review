@@ -1,5 +1,6 @@
 from django.db.models import Avg, Count
 from rest_framework import mixins, viewsets
+from rest_framework.pagination import PageNumberPagination
 
 from .models import Actor, Movie, Review
 from .serializers import (
@@ -12,8 +13,13 @@ from .serializers import (
 )
 
 
+class MoviePagination(PageNumberPagination):
+    page_size = 5
+
+
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
+    pagination_class = MoviePagination
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -28,7 +34,7 @@ class MovieViewSet(viewsets.ModelViewSet):
             return queryset.annotate(
                 average_review=Avg("reviews__grade"),
                 actor_count=Count("actors", distinct=True),
-            )
+            ).order_by("title")
         if self.action == "retrieve":
             return queryset.annotate(
                 average_review=Avg("reviews__grade"),
