@@ -1,3 +1,119 @@
-from django.test import TestCase
+import pytest
+from rest_framework import status
+from rest_framework.test import APIClient
 
-# Create your tests here.
+from movies.models import Actor, Movie
+
+
+@pytest.fixture
+def client():
+    return APIClient()
+
+
+@pytest.fixture
+def actor():
+    return Actor.objects.create(first_name="aaaaa", last_name="bbbbb")
+
+
+@pytest.fixture
+def movie(actor):
+    movie = Movie.objects.create(title="aaaaa", description="bbbbb")
+    movie.actors.add(actor)
+    return movie
+
+
+@pytest.mark.django_db
+def test_list_movies(client, movie):
+    response = client.get("/api/movies/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data[0]["id"] == movie.id
+    assert response.data[0]["title"] == movie.title
+
+
+@pytest.mark.django_db
+def test_retrieve_movie(client, movie, actor):
+    response = client.get(f"/api/movies/{movie.id}/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["title"] == movie.title
+    assert response.data["description"] == movie.description
+    assert response.data["actors"] == [
+        {
+            "id": actor.id,
+            "first_name": actor.first_name,
+            "last_name": actor.last_name,
+        }
+    ]
+
+
+@pytest.mark.django_db
+def test_create_movie(client):
+    response = client.post(
+        "/api/movies/",
+        {"title": "ccccc", "description": "ddddd"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Movie.objects.count() == 1
+    created = Movie.objects.get()
+    assert created.title == "ccccc"
+    assert created.description == "ddddd"
+
+
+@pytest.mark.django_db
+def test_create_movie_ignores_actors(client, actor):
+    response = client.post(
+        "/api/movies/",
+        {"title": "ccccc", "description": "ddddd", "actors": [actor.id]},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    created = Movie.objects.get()
+    assert list(created.actors.all()) == []
+
+
+@pytest.mark.django_db
+def test_update_movie(client, movie):
+    response = client.put(
+        f"/api/movies/{movie.id}/",
+        {"title": "eeeee", "description": "fffff"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    movie.refresh_from_db()
+    assert movie.title == "eeeee"
+    assert movie.description == "fffff"
+
+
+@pytest.mark.django_db
+def test_update_movie_does_not_change_actors(client, movie, actor):
+    other_actor = Actor.objects.create(first_name="ccccc", last_name="ddddd")
+
+    response = client.put(
+        f"/api/movies/{movie.id}/",
+        {"title": "eeeee", "description": "fffff", "actors": [other_actor.id]},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    movie.refresh_from_db()
+    assert list(movie.actors.all()) == [actor]
+
+
+@pytest.mark.django_db
+def test_delete_movie(client, movie):
+    response = client.delete(f"/api/movies/{movie.id}/")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert Movie.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_retrieve_movie_not_found(client):
+    response = client.get("/api/movies/999/")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
