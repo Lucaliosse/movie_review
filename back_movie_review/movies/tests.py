@@ -54,7 +54,9 @@ def test_retrieve_movie(client, movie, actor):
     assert response.status_code == status.HTTP_200_OK
     assert response.data["title"] == movie.title
     assert response.data["description"] == movie.description
-    assert response.data["actors"] == [str(actor)]
+    assert response.data["actors"] == [
+        {"id": actor.id, "first_name": actor.first_name, "last_name": actor.last_name}
+    ]
     assert response.data["average_review"] is None
     assert response.data["review_count"] == 0
 

@@ -4,7 +4,7 @@
   <v-app>
     <v-app-bar title="Movie Review" />
     <v-main>
-      <router-view />
+      <router-view :key="$route.fullPath" />
     </v-main>
   </v-app>
 </template>
