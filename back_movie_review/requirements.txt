@@ -4,3 +4,4 @@ drf-spectacular==0.30
 pytest-django==4.14
 django-cors-headers==4.9.0
 django-environ==0.14.0
+black==26.5.1
